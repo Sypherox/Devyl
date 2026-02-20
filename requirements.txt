@@ -1,0 +1,7 @@
+customtkinter==5.2.2
+Pillow>=10.4.0
+requests>=2.32.0
+psutil>=6.1.0
+pywin32>=308
+pynput>=1.7.6
+pyinstaller>=6.0.0
