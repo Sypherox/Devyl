@@ -532,7 +532,66 @@ class ReportGenerator:
         </div>
     </div>
 """
-
+        doomsday = scan_results.get("doomsday", {})
+        doomsday_detections = doomsday.get("detections", [])
+        if doomsday_detections:
+            html += """
+    <div class="section">
+        <div class="section-header" onclick="toggleSection('doomsday')">
+            <div class="section-title">☠️ Doomsday Client</div>
+            <span class="section-toggle-icon" id="icon-doomsday">▶</span>
+        </div>
+        <div class="section-body" id="body-doomsday">
+"""
+            for det in doomsday_detections:
+                conf        = det.get("confidence", "UNKNOWN")
+                is_running  = det.get("is_running", False)
+                status_txt  = "🔴 IN USE" if is_running else "⚠️ Found on system"
+                conf_color  = "#FF0000" if conf == "HIGH" else ("#ffaa00" if conf == "MEDIUM" else "#888888")
+                html += f"""
+            <div class="driver-item suspicious">
+                <div class="driver-header">
+                    <div class="driver-header-left">
+                        <div class="driver-name">☠️ Doomsday Client — {conf} Confidence</div>
+                    </div>
+                    <div class="status-badge status-suspicious">Suspicious</div>
+                </div>
+                <div class="driver-details show">
+                    <div class="detail-row">
+                        <div class="detail-label">Status:</div>
+                        <div class="detail-value" style="color:{conf_color};font-weight:bold;">{status_txt}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Path:</div>
+                        <div class="detail-value">{det.get('path','Unknown')}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Confidence:</div>
+                        <div class="detail-value" style="color:{conf_color};font-weight:bold;">{conf}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Byte Patterns:</div>
+                        <div class="detail-value">{det.get('byte_patterns', 0)}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Class Matches:</div>
+                        <div class="detail-value">{det.get('class_matches', 0)}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Renamed JAR:</div>
+                        <div class="detail-value">{'Yes 🚨' if det.get('is_renamed_jar') else 'No'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Source Prefetch:</div>
+                        <div class="detail-value">{det.get('source_prefetch','N/A')}</div>
+                    </div>
+                </div>
+            </div>
+"""
+            html += """
+        </div>
+    </div>
+"""
         accounts_list = account_data.get("accounts", [])
         html += """
     <div class="section">

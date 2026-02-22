@@ -4,7 +4,6 @@ import os
 import sys
 import math
 
-# Config import
 try:
     from config import ACCESS_CODE
 except ImportError:
@@ -16,7 +15,6 @@ import tkinter.font as tkfont
 from pathlib import Path
 
 def get_resource_path(relative_path):
-    """Gibt den absoluten Pfad zur Ressource zurück"""
     try:
         base_path = sys._MEIPASS
     except Exception:
@@ -24,7 +22,6 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def load_custom_font(font_path):
-    """Lädt eine custom TTF Font"""
     try:
         from ctypes import windll, byref, create_unicode_buffer, create_string_buffer
         FR_PRIVATE = 0x10
@@ -42,7 +39,6 @@ def load_custom_font(font_path):
         print(f"Font loading error: {e}")
     return False
 
-# Font laden beim Start
 MINECRAFT_FONT_LOADED = False
 for font_name in ["Minecraft.ttf", "Minecrafter.Reg.ttf", "Minecraftia.ttf"]:
     font_path = get_resource_path(font_name)
@@ -55,12 +51,10 @@ class DevylApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        # Window configuration
         self.title("𝕯𝖊𝖛𝖞𝖑")
         self.geometry("800x850")
         self.resizable(False, False)
         
-        # Icon setzen (für Taskbar und Fenster)
         icon_path = get_resource_path("Logo.ico")
         if os.path.exists(icon_path):
             try:
@@ -69,18 +63,15 @@ class DevylApp(ctk.CTk):
             except Exception as e:
                 print(f"Icon error: {e}")
         
-        # Neon Red Theme
         ctk.set_appearance_mode("dark")
         self.configure(fg_color="#0a0a0a")
         
-        # Colors
         self.RED_NEON = "#AA0000"
         self.RED_GLOW = "#FF0000"
         self.RED_DARK = "#660000"
         self.BG_DARK = "#0a0a0a"
         self.BG_CARD = "#1a1a1a"
         
-        # Animation state
         self.glow_time = 0
         self.animation_running = True
         
@@ -88,11 +79,10 @@ class DevylApp(ctk.CTk):
         self.animate_glow()
     
     def create_glowing_logo(self):
-        """Erstellt ein Logo mit Neon-Glow Effekt"""
         logo_path = get_resource_path("Logo.png")
         
         if not os.path.exists(logo_path):
-            print(f"WARNUNG: Logo nicht gefunden: {logo_path}")
+            print(f"WARNING: Logo not found: {logo_path}")
             return None
         
         try:
@@ -124,11 +114,9 @@ class DevylApp(ctk.CTk):
             return None
     
     def setup_ui(self):
-        # Main Container
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=40, pady=40)
         
-        # Logo mit Glow - ZENTRIERT
         logo_image = self.create_glowing_logo()
         if logo_image:
             logo_container = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -137,7 +125,6 @@ class DevylApp(ctk.CTk):
             self.logo_label = ctk.CTkLabel(logo_container, image=logo_image, text="")
             self.logo_label.pack()
         
-        # Title - ZENTRIERT
         title_container = ctk.CTkFrame(main_frame, fg_color="transparent")
         title_container.pack(pady=(0, 5), fill="x")
         
@@ -149,7 +136,6 @@ class DevylApp(ctk.CTk):
         )
         self.title_label.pack()
         
-        # Subtitle
         subtitle = ctk.CTkLabel(
             main_frame,
             text="━━━  DFIR SCREENSHARE TOOL  ━━━",
@@ -158,7 +144,6 @@ class DevylApp(ctk.CTk):
         )
         subtitle.pack(pady=(0, 35))
         
-        # Outer Glow Frame (für Neon-Effekt)
         self.outer_glow_frame = ctk.CTkFrame(
             main_frame,
             fg_color="transparent",
@@ -166,7 +151,6 @@ class DevylApp(ctk.CTk):
         )
         self.outer_glow_frame.pack(pady=20, padx=60, fill="x")
         
-        # Card Frame mit Border
         self.card_frame = ctk.CTkFrame(
             self.outer_glow_frame, 
             fg_color=self.BG_CARD,
@@ -176,11 +160,9 @@ class DevylApp(ctk.CTk):
         )
         self.card_frame.pack(padx=3, pady=3, fill="x")
         
-        # Card Content
         card_content = ctk.CTkFrame(self.card_frame, fg_color="transparent")
         card_content.pack(padx=40, pady=35)
         
-        # Access Code Label
         code_label = ctk.CTkLabel(
             card_content,
             text="ACCESS CODE",
@@ -189,7 +171,6 @@ class DevylApp(ctk.CTk):
         )
         code_label.pack(pady=(0, 10))
         
-        # Password Entry Outer Glow
         self.entry_outer_frame = ctk.CTkFrame(
             card_content,
             fg_color="transparent",
@@ -197,7 +178,6 @@ class DevylApp(ctk.CTk):
         )
         self.entry_outer_frame.pack(pady=10)
         
-        # Password Entry mit Border
         self.password_entry = ctk.CTkEntry(
             self.entry_outer_frame,
             placeholder_text="Enter your access code",
@@ -215,7 +195,6 @@ class DevylApp(ctk.CTk):
         self.password_entry.pack(padx=3, pady=3)
         self.password_entry.bind("<Return>", lambda e: self.start_scan())
         
-        # Start Button Container für Glow
         self.button_outer_frame = ctk.CTkFrame(
             card_content,
             fg_color="transparent",
@@ -223,7 +202,6 @@ class DevylApp(ctk.CTk):
         )
         self.button_outer_frame.pack(pady=(15, 0))
         
-        # Start Button - Epic Style
         self.start_button = ctk.CTkButton(
             self.button_outer_frame,
             text="⚡ START SCAN ⚡",
@@ -240,7 +218,6 @@ class DevylApp(ctk.CTk):
         )
         self.start_button.pack(padx=3, pady=3)
         
-        # Coded by Sypherox
         self.coded_by = ctk.CTkLabel(
             card_content,
             text="Coded by Sypherox",
@@ -249,7 +226,6 @@ class DevylApp(ctk.CTk):
         )
         self.coded_by.pack(pady=(18, 0))
         
-        # Status Label
         self.status_label = ctk.CTkLabel(
             main_frame,
             text="",
@@ -258,7 +234,6 @@ class DevylApp(ctk.CTk):
         )
         self.status_label.pack(pady=15)
         
-        # Footer - fest am Ende
         footer_container = ctk.CTkFrame(main_frame, fg_color="transparent", height=30)
         footer_container.pack(side="bottom", fill="x", pady=(15, 0))
         footer_container.pack_propagate(False)
@@ -272,7 +247,6 @@ class DevylApp(ctk.CTk):
         footer.pack(expand=True)
     
     def animate_glow(self):
-        """Animiert den Neon-Glow Effekt"""
         if not self.animation_running:
             return
         
@@ -295,7 +269,7 @@ class DevylApp(ctk.CTk):
             self.entry_outer_frame.configure(fg_color=shadow_color)
             self.button_outer_frame.configure(fg_color=shadow_color)
         except:
-            pass  # Widgets wurden bereits gelöscht
+            pass
         
         self.after(30, self.animate_glow)
     
@@ -313,7 +287,7 @@ class DevylApp(ctk.CTk):
         if password == ACCESS_CODE:
             self.show_status("✓ ACCESS GRANTED - INITIALIZING SCAN SEQUENCE", self.RED_GLOW)
             self.start_button.configure(text="⚡ SCANNING... ⚡")
-            self.animation_running = False  # Stop animation
+            self.animation_running = False
             self.after(1500, self.show_scan_screen)
         else:
             self.show_status("✗ INVALID ACCESS CODE - ACCESS DENIED", "#ff4444")
@@ -321,7 +295,6 @@ class DevylApp(ctk.CTk):
             self.shake_window()
     
     def shake_window(self):
-        """Shake Effekt bei falschem Passwort"""
         original_x = self.winfo_x()
         original_y = self.winfo_y()
         
@@ -339,23 +312,18 @@ class DevylApp(ctk.CTk):
         self.status_label.configure(text=message, text_color=color)
     
     def show_scan_screen(self):
-        """Zeigt den Scan-Bildschirm mit Progress Bar"""
-        # Lösche alles
         for widget in self.winfo_children():
             widget.destroy()
         
-        # Neuer Main Frame für Scan
         self.scan_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.scan_frame.pack(fill="both", expand=True, padx=40, pady=40)
         
-        # Logo klein oben
         logo_image = self.create_glowing_logo()
         if logo_image:
             small_logo_label = ctk.CTkLabel(self.scan_frame, image=logo_image, text="")
-            small_logo_label.image = logo_image  # Keep reference
+            small_logo_label.image = logo_image
             small_logo_label.pack(pady=(0, 20))
         
-        # Title
         self.scan_title = ctk.CTkLabel(
             self.scan_frame,
             text="SCANNING SYSTEM",
@@ -364,7 +332,6 @@ class DevylApp(ctk.CTk):
         )
         self.scan_title.pack(pady=(0, 10))
         
-        # Scan Status Text
         self.scan_status_label = ctk.CTkLabel(
             self.scan_frame,
             text="Initializing scan...",
@@ -373,7 +340,6 @@ class DevylApp(ctk.CTk):
         )
         self.scan_status_label.pack(pady=(0, 30))
         
-        # Progress Bar Container (für Glow)
         self.progress_outer = ctk.CTkFrame(
             self.scan_frame,
             fg_color=self.RED_DARK,
@@ -381,7 +347,6 @@ class DevylApp(ctk.CTk):
         )
         self.progress_outer.pack(pady=20, padx=100, fill="x")
         
-        # Progress Bar
         self.progress_bar = ctk.CTkProgressBar(
             self.progress_outer,
             width=600,
@@ -395,7 +360,6 @@ class DevylApp(ctk.CTk):
         self.progress_bar.pack(padx=3, pady=3)
         self.progress_bar.set(0)
         
-        # Progress Text
         self.progress_text = ctk.CTkLabel(
             self.scan_frame,
             text="0/8 scans completed",
@@ -404,7 +368,6 @@ class DevylApp(ctk.CTk):
         )
         self.progress_text.pack(pady=(10, 40))
         
-        # Footer
         footer = ctk.CTkLabel(
             self.scan_frame,
             text="© 2026 sypherox.dev",
@@ -413,14 +376,11 @@ class DevylApp(ctk.CTk):
         )
         footer.pack(side="bottom", pady=(20, 0))
         
-        # Start Glow Animation für Scan Screen
         self.animate_scan_glow()
         
-        # Start den eigentlichen Scan
         self.after(500, self.run_scan)
     
     def animate_scan_glow(self):
-        """Animiert Glow im Scan Screen"""
         if not hasattr(self, 'scan_title'):
             return
         
@@ -450,6 +410,7 @@ class DevylApp(ctk.CTk):
         from scanner.mouse_scanner import MouseScanner
         from scanner.powershell_scanner import PowerShellScanner
         from scanner.account_scanner import AccountScanner
+        from scanner.doomsday_scanner import DoomsdayScanner
         import time
 
         scan_start_time = time.time()
@@ -468,6 +429,10 @@ class DevylApp(ctk.CTk):
 
         self.after(0, lambda: self.scan_status_label.configure(text="Scanning system (PowerShell checks)..."))
 
+        self.after(0, lambda: self.scan_status_label.configure(text="Scanning for Doomsday Client..."))
+        doomsday_scanner = DoomsdayScanner()
+        doomsday_results = doomsday_scanner.run()
+
         ps_results = ps_scanner.run()
 
         scan_duration = time.time() - scan_start_time
@@ -481,6 +446,7 @@ class DevylApp(ctk.CTk):
             "usb_log":          ps_results.get("usb_log")          if ps_results else [],
             "file_log":         ps_results.get("file_log")         if ps_results else [],   
             "accounts":         account_results,
+            "doomsday":         doomsday_results,
         }
 
         self.after(0, lambda: self.scan_status_label.configure(text="✓ Scan completed successfully!"))
@@ -493,38 +459,38 @@ class DevylApp(ctk.CTk):
 
     def _generate_report_worker(self, scan_data):
         try:
-            print("DEBUG: Worker gestartet")
+            print("DEBUG: Worker started")
             from utils.report_generator import ReportGenerator
-            print("DEBUG: ReportGenerator importiert")
+            print("DEBUG: ReportGenerator imported")
         
             report_gen = ReportGenerator()
-            print("DEBUG: ReportGenerator erstellt")
+            print("DEBUG: ReportGenerator created")
 
             html_path, scan_id = report_gen.generate_html(scan_data)
-            print(f"DEBUG: HTML generiert: {html_path}")
+            print(f"DEBUG: HTML generated: {html_path}")
 
             self.after(0, lambda: self.scan_status_label.configure(text="✓ Result generated"))
 
             try:
                 from config import DISCORD_WEBHOOK_URL
                 if DISCORD_WEBHOOK_URL and DISCORD_WEBHOOK_URL != "https://discord.com/api/webhooks/DEINE_WEBHOOK_HIER":
-                    print("DEBUG: Sende Webhook...")
+                    print("DEBUG: Sending Webhook...")
                     from utils.discord_webhook import DiscordWebhook
                     webhook = DiscordWebhook(DISCORD_WEBHOOK_URL)
                     webhook.send_scan_result(scan_data, scan_id, html_path)
-                    print("DEBUG: Webhook gesendet")
+                    print("DEBUG: Webhook was send")
             except Exception as e:
-                print(f"DEBUG: Webhook Fehler: {e}")
+                print(f"DEBUG: Webhook Error: {e}")
 
             import webbrowser, os
             webbrowser.open(f"file:///{os.path.abspath(html_path)}")
-            print("DEBUG: Browser geöffnet")
+            print("DEBUG: Browser opened")
 
             self.after(0, self._show_post_scan_buttons)
-            print("DEBUG: Fertig!")
+            print("DEBUG: Done!")
 
         except Exception as e:
-            print(f"DEBUG FEHLER: {e}")
+            print(f"DEBUG ERROR: {e}")
             import traceback
             traceback.print_exc()
             self.after(0, lambda err=str(e): self.scan_status_label.configure(
@@ -532,15 +498,12 @@ class DevylApp(ctk.CTk):
             ))
 
     def _show_post_scan_buttons(self):
-        """Zeigt die Post-Scan Action Buttons an"""
-        # Button Container
         btn_frame = ctk.CTkFrame(
             self.scan_frame,
             fg_color="transparent"
         )       
         btn_frame.pack(pady=(20, 0))
 
-        # Trennlinie / Label
         ctk.CTkLabel(
             btn_frame,
             text="━━━  ACTIONS  ━━━",
@@ -548,11 +511,9 @@ class DevylApp(ctk.CTk):
             text_color="#444444"
         ).pack(pady=(0, 15))
 
-        # Button-Reihe
         row = ctk.CTkFrame(btn_frame, fg_color="transparent")
         row.pack()
 
-        # ── Show all hidden files ─────────────────────────────────────────
         ctk.CTkButton(
             row,
             text="👁 Show all hidden files",
@@ -568,7 +529,6 @@ class DevylApp(ctk.CTk):
             command=self._run_show_hidden_files
         ).pack(side="left", padx=8)
 
-        # ── Download RustDesk ─────────────────────────────────────────────
         ctk.CTkButton(
             row,
             text="⬇ Download RustDesk",
@@ -584,7 +544,6 @@ class DevylApp(ctk.CTk):
             command=self._download_rustdesk
         ).pack(side="left", padx=8)
 
-        # ── Mouse Tracker ─────────────────────────────────────────────────
         ctk.CTkButton(
             row,
             text="🖱 Mouse Tracker",
@@ -602,12 +561,10 @@ class DevylApp(ctk.CTk):
 
 
     def _run_show_hidden_files(self):
-        """Führt das ShowHidden Registry Script aus"""
         from scanner.powershell_scanner import PowerShellScanner
         try:
             ps = PowerShellScanner()
             ps.set_show_hidden_files()
-            # Button Feedback
             for widget in self.winfo_children():
                 self._flash_status("✓ Hidden files are now visible", "#00ff88")
         except Exception as e:
@@ -615,7 +572,6 @@ class DevylApp(ctk.CTk):
 
 
     def _download_rustdesk(self):   
-        """Öffnet RustDesk Download"""
         import webbrowser
         webbrowser.open("https://github.com/rustdesk/rustdesk/releases/download/1.4.0/rustdesk-1.4.0-x86_64.exe")
 
@@ -625,7 +581,6 @@ class DevylApp(ctk.CTk):
 
 
     def _flash_status(self, message, color):
-        """Zeigt kurz eine Status-Nachricht"""
         try:
             self.scan_status_label.configure(text=message, text_color=color)
         except Exception:
@@ -649,7 +604,6 @@ class MouseTrackerWindow(ctk.CTkToplevel):
         self.resizable(False, False)
         self.configure(fg_color="#0a0a0a")
 
-        # Header
         ctk.CTkLabel(
             self,
             text="🖱 MOUSE TRACKER",
@@ -664,7 +618,6 @@ class MouseTrackerWindow(ctk.CTkToplevel):
             text_color="#555555"
         ).pack(pady=(0, 15))
 
-        # Output Box
         self.output = ctk.CTkTextbox(
             self,
             width=560,
@@ -679,7 +632,6 @@ class MouseTrackerWindow(ctk.CTkToplevel):
         )
         self.output.pack(padx=20)
 
-        # Clear Button
         ctk.CTkButton(
             self,
             text="🗑 Clear",
@@ -697,7 +649,6 @@ class MouseTrackerWindow(ctk.CTkToplevel):
         self._running = True
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
-        # pynput in Thread starten
         self._thread = threading.Thread(target=self._start_listener, daemon=True)
         self._thread.start()
 
@@ -721,10 +672,10 @@ class MouseTrackerWindow(ctk.CTkToplevel):
 
         def on_click(x, y, button, pressed):
             if not self._running:
-                return False  # Listener stoppen
+                return False 
 
             if not pressed:
-                return  # nur Press, nicht Release
+                return
 
             btn_num = None
             name    = str(button)

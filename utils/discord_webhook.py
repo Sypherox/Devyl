@@ -19,6 +19,8 @@ class DiscordWebhook:
         mouse_drivers = scan_results.get("mouse_drivers", [])
         banable       = scan_results.get("banable_programs", [])
 
+        doomsday = scan_results.get("doomsday", {})
+
         suspicious_fields = []
 
         for d in mouse_drivers:
@@ -132,6 +134,22 @@ class DiscordWebhook:
                     "value": "```Suspicious registry value detected```",
                     "inline": False
                 })
+
+        for det in doomsday.get("detections", []):
+            status_icon = "🔴 IN USE" if det["is_running"] else "⚠️ Found"
+            suspicious_fields.append({
+                "name": f"☠️ Doomsday Client [{det['confidence']}]",
+                "value": (
+                    f"```"
+                    f"Status:     {status_icon}\n"
+                    f"Path:       {det['path']}\n"
+                    f"Confidence: {det['confidence']}\n"
+                    f"Byte Patterns: {det['byte_patterns']}\n"
+                    f"Class Matches: {det['class_matches']}"
+                    f"```"
+                ),
+                "inline": False
+            })
 
         if suspicious_fields:
             color  = 0xFF0000
