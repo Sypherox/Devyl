@@ -670,32 +670,55 @@ class ReportGenerator:
 """
         if accounts_list:
             for acc in accounts_list:
-                uuid_raw      = acc.get("uuid", "")
-                uuid_d        = acc.get("uuid_dashed", uuid_raw)
-                name          = acc.get("name", "Unknown")
-                sources       = ", ".join(acc.get("sources", []))
-                is_main       = acc.get("main", False)
-                main_badge    = '<span class="main-badge">MAIN</span>' if is_main else ''
-                row_class     = "is-main" if is_main else ""
-                namemc_url    = f"https://de.namemc.com/profile/{uuid_d}"
-                laby_url      = f"https://laby.net/@{uuid_d}"
+                uuid_raw   = acc.get("uuid") or ""
+                uuid_d     = acc.get("uuid_dashed") or uuid_raw
+                name       = acc.get("name", "Unknown")
+                sources    = ", ".join(acc.get("sources", []))
+                is_main    = acc.get("main", False)
+                maybe_main = acc.get("maybe_main", False)
+                from_log   = acc.get("from_log", False)
+                mentions   = acc.get("mention_count", 0)
+
+                if is_main:
+                    badge = '<span class="main-badge">MAIN</span>'
+                elif maybe_main:
+                    badge = '<span class="main-badge" style="background:rgba(255,170,0,0.2);color:#ffaa00;border-color:#ffaa00;">MAYBE MAIN</span>'
+                elif from_log:
+                    badge = '<span class="main-badge" style="background:rgba(100,100,255,0.15);color:#6688ff;border-color:#6688ff;">LOG</span>'
+                else:
+                    badge = ''
+
+                row_class = "is-main" if (is_main or maybe_main) else ""
+
+                avatar_url    = f"https://visage.surgeplay.com/bust/{uuid_raw}" if uuid_raw \
+                                else f"https://visage.surgeplay.com/bust/{name}"
+
+                profile_key   = uuid_d if uuid_d else name
+                namemc_url    = f"https://de.namemc.com/profile/{profile_key}"
+                laby_url      = f"https://laby.net/@{profile_key}"
                 pvprivals_url = f"https://pvprivals.net/profile/{name}"
-                avatar_url    = f"https://visage.surgeplay.com/bust/{uuid_raw}"
+                mention_str   = f'<div class="alt-sources">Seen {mentions}x in logs · {sources}</div>' \
+                                if from_log else \
+                                f'<div class="alt-sources">Found in: {sources}</div>'
+
                 html += f"""
-            <div class="alt-account-row {row_class}">
-                <img class="alt-avatar" src="{avatar_url}" alt="{name}" onerror="this.style.background='#2a2a2a'">
-                <div class="alt-info">
-                    <div class="alt-name">{name}{main_badge}</div>
-                    <div class="alt-uuid">{uuid_d}</div>
-                    <div class="alt-sources">Found in: {sources}</div>
-                </div>
-                <div class="alt-actions">
-                    <a class="alt-btn" href="{namemc_url}" target="_blank">NameMC</a>
-                    <a class="alt-btn" href="{laby_url}" target="_blank">Laby</a>
-                    <a class="alt-btn" href="{pvprivals_url}" target="_blank">PvPRivals</a>
-                </div>
-            </div>
-"""
+                    <div class="alt-account-row {row_class}">
+                        <img class="alt-avatar"
+                             src="{avatar_url}"
+                             alt="{name}"
+                 onerror="this.onerror=null;this.src='https://visage.surgeplay.com/bust/MHF_Steve';">
+                        <div class="alt-info">
+                            <div class="alt-name">{name}{badge}</div>
+                            <div class="alt-uuid">{uuid_d if uuid_d else 'No UUID (Log)'}</div>
+                            {mention_str}
+                        </div>
+                        <div class="alt-actions">
+                            <a class="alt-btn" href="{namemc_url}" target="_blank">NameMC</a>
+                            <a class="alt-btn" href="{laby_url}" target="_blank">Laby</a>
+                            <a class="alt-btn" href="{pvprivals_url}" target="_blank">PvPRivals</a>
+                        </div>
+                    </div>
+                """
         else:
             html += '            <div class="no-results">No accounts found.</div>\n'
 
@@ -703,7 +726,6 @@ class ReportGenerator:
         </div>
     </div>
 """
-
         usn     = bypass.get("usn", {})
         evlogs  = bypass.get("eventlogs", {})
         rb      = bypass.get("recycle_bin", {})

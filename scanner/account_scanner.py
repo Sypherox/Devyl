@@ -160,24 +160,48 @@ class AccountScanner:
                 "main":    info.get("main", False),
             })
 
-        result.sort(key=lambda x: (not x["main"], x["name"].lower()))
+        result.sort(key=lambda x: (not x.get("main", False), x["name"].lower()))
+        main_name = next((a["name"] for a in result if a.get("main")), None)
 
-        main_name = next((a["name"] for a in result if a["main"]), None)
-        return {"accounts": result, "main_name": main_name}
+        from scanner.log_account_scanner import LogAccountScanner
+
+        log_scanner     = LogAccountScanner()
+        log_results     = log_scanner.run()
+
+        known_names_lower = {a["name"].lower() for a in result}
+        has_main = any(a.get("main") for a in result)
+
+        log_accounts = []
+        for la in log_results["accounts"]:
+            if la["name"].lower() in known_names_lower:
+                continue
+
+            if not has_main and log_results["accounts"] and la == log_results["accounts"][0]:
+                la["maybe_main"] = True
+            result.append(la)
+
+        if not has_main and result:
+            result[0]["maybe_main"] = True 
+
+        if not main_name:
+            maybe = next((a["name"] for a in all_accounts if a.get("maybe_main")), None)
+            main_name = maybe or (all_accounts[0]["name"] if all_accounts else "Unknown")
+
+        return {
+            "main_name": main_name,
+            "accounts":  result,
+        }
 
     def _norm(self, uuid_str: str) -> str:
-        """Entfernt Bindestriche, lowercase"""
         return uuid_str.replace("-", "").lower().strip() if uuid_str else ""
 
     def _to_dashed(self, uuid: str) -> str:
-        """xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx → xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"""
         u = uuid.replace("-", "")
         if len(u) != 32:
             return uuid
         return f"{u[0:8]}-{u[8:12]}-{u[12:16]}-{u[16:20]}-{u[20:32]}"
 
     def _add(self, store: dict, uuid: str, name: str, source: str):
-        """Fügt UUID zur Liste hinzu, verhindert Duplikate"""
         if uuid not in store:
             store[uuid] = {"name": name, "sources": [source], "main": False}
         else:
@@ -187,7 +211,6 @@ class AccountScanner:
                 store[uuid]["sources"].append(source)
 
     def _fetch_name(self, uuid: str) -> str:
-        """Holt Accountnamen von Mojang API"""
         try:
             url = f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}"
             req = urllib.request.Request(url, headers={"User-Agent": "DevylScanner/1.0"})
@@ -198,7 +221,6 @@ class AccountScanner:
             return ""
 
     def _extract_uuids_from_binary(self, path: str) -> list:
-        """Extrahiert UUID-ähnliche Strings aus einer Binärdatei (Badlion .dat)"""
         uuids = []
         try:
             with open(path, "rb") as f:

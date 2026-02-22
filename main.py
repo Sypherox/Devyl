@@ -409,7 +409,7 @@ class DevylApp(ctk.CTk):
     def _run_scan_thread(self):
         from scanner.mouse_scanner import MouseScanner
         from scanner.powershell_scanner import PowerShellScanner
-        from scanner.account_scanner import AccountScanner
+        from scanner.account_scanner import AccountScanner 
         from scanner.doomsday_scanner import DoomsdayScanner
         from scanner.unsigned_scanner import UnsignedScanner
         import time
@@ -419,7 +419,9 @@ class DevylApp(ctk.CTk):
         mouse_scanner = MouseScanner()
         ps_scanner = PowerShellScanner()
         account_scanner = AccountScanner()
-        account_results = account_scanner.run()
+
+        self.after(0, lambda: self.scan_status_label.configure(text="Scanning Minecraft log files for accounts..."))
+        account_results = account_scanner.run() 
 
         def update_progress(driver_name, current, total):
             progress = current / total
@@ -428,6 +430,7 @@ class DevylApp(ctk.CTk):
             self.after(0, lambda: self.progress_text.configure(text=f"{current}/{total} scans completed"))
 
         mouse_results = mouse_scanner.scan(progress_callback=update_progress)
+
 
         self.after(0, lambda: self.scan_status_label.configure(text="Scanning system (PowerShell checks)..."))
 
