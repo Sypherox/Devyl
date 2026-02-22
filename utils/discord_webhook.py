@@ -21,6 +21,8 @@ class DiscordWebhook:
 
         doomsday = scan_results.get("doomsday", {})
 
+        unsigned = scan_results.get("unsigned", {})
+
         suspicious_fields = []
 
         for d in mouse_drivers:
@@ -66,6 +68,28 @@ class DiscordWebhook:
                     "value": f"```{items}```",
                     "inline": False
                 })
+
+        for cf in unsigned.get("cheat_files", []):
+            suspicious_fields.append({
+                "name": f"🚨 Manthe Client Binary",
+                "value": (
+                    f"```"
+                    f"File: {cf['name']}\n"
+                    f"Path: {cf['path']}\n"
+                    f"Size: {cf['size_mb']} MB\n"
+                    f"Modified: {cf['last_mod']}"
+                    f"```"
+                ),
+                "inline": False
+            })
+
+        u_count = len(unsigned.get("unsigned_files", []))
+        if u_count > 0:
+            suspicious_fields.append({
+                "name": f"🔓 Unsigned Executables in System32/SysWOW64/Temp",
+                "value": f"```{u_count} unsigned file(s) found```",
+                "inline": False
+            })
 
         renamed = bypass.get("renamed_exes", {})
         if renamed.get("level") == "Suspicious":

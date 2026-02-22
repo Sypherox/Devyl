@@ -592,6 +592,73 @@ class ReportGenerator:
         </div>
     </div>
 """
+
+        unsigned = scan_results.get("unsigned", {})
+        unsigned_files = unsigned.get("unsigned_files", [])
+        cheat_files    = unsigned.get("cheat_files", [])
+
+        if unsigned_files or cheat_files:
+            html += """
+    <div class="section">
+        <div class="section-header" onclick="toggleSection('unsigned')">
+            <div class="section-title">🔓 Unsigned Executables</div>
+            <span class="section-toggle-icon" id="icon-unsigned">▶</span>
+        </div>
+        <div class="section-body" id="body-unsigned">
+"""
+            for f in cheat_files:
+                html += f"""
+            <div class="driver-item suspicious">
+                <div class="driver-header">
+                    <div class="driver-header-left">
+                        <div class="driver-name">🚨 CHEAT BINARY — {f['name']}</div>
+                    </div>
+                    <div class="status-badge status-suspicious">Manthe Signed</div>
+                </div>
+                <div class="driver-details show">
+                    <div class="detail-row"><div class="detail-label">Path:</div><div class="detail-value">{f['path']}</div></div>
+                    <div class="detail-row"><div class="detail-label">Size:</div><div class="detail-value">{f['size_mb']} MB</div></div>
+                    <div class="detail-row"><div class="detail-label">Last Modified:</div><div class="detail-value">{f['last_mod']}</div></div>
+                    <div class="detail-row"><div class="detail-label">Signer:</div><div class="detail-value" style="color:#FF0000;">{f['signer']}</div></div>
+                    <div class="detail-row"><div class="detail-label">Directory:</div><div class="detail-value">{f['directory']}</div></div>
+                </div>
+            </div>
+"""
+            if unsigned_files:
+                html += f"""
+            <div style="margin-top:16px;color:#888;font-size:12px;margin-bottom:8px;">
+                {len(unsigned_files)} unsigned executable(s) found in system directories
+            </div>
+            <table class="file-log-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th style="width:80px">Size</th>
+                        <th style="width:160px">Last Modified</th>
+                        <th>Path</th>
+                        <th style="width:100px">Signature</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+                for f in unsigned_files:
+                    html += f"""
+                    <tr>
+                        <td>{f['name']}</td>
+                        <td>{f['size_mb']} MB</td>
+                        <td>{f['last_mod']}</td>
+                        <td style="font-size:10px;">{f['path']}</td>
+                        <td style="color:#ffaa00;">{f['sig_status']}</td>
+                    </tr>
+"""
+                html += """
+                </tbody>
+            </table>
+"""
+            html += """
+        </div>
+    </div>
+"""
         accounts_list = account_data.get("accounts", [])
         html += """
     <div class="section">

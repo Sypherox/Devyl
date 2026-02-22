@@ -411,6 +411,7 @@ class DevylApp(ctk.CTk):
         from scanner.powershell_scanner import PowerShellScanner
         from scanner.account_scanner import AccountScanner
         from scanner.doomsday_scanner import DoomsdayScanner
+        from scanner.unsigned_scanner import UnsignedScanner
         import time
 
         scan_start_time = time.time()
@@ -433,6 +434,18 @@ class DevylApp(ctk.CTk):
         doomsday_scanner = DoomsdayScanner()
         doomsday_results = doomsday_scanner.run()
 
+        self.after(0, lambda: self.scan_status_label.configure(text="Scanning for unsigned executables..."))
+        unsigned_scanner = UnsignedScanner()
+        unsigned_results = unsigned_scanner.run()
+
+        for cf in unsigned_results.get("cheat_files", []):
+            banable_programs.append({
+                "name":      f"Manthe Client — {cf['name']}",
+                "path":      cf["path"],
+                "last_run":  cf["last_mod"],
+                "suspicious": True,
+            })
+
         ps_results = ps_scanner.run()
 
         scan_duration = time.time() - scan_start_time
@@ -447,6 +460,7 @@ class DevylApp(ctk.CTk):
             "file_log":         ps_results.get("file_log")         if ps_results else [],   
             "accounts":         account_results,
             "doomsday":         doomsday_results,
+            "unsigned": unsigned_results,
         }
 
         self.after(0, lambda: self.scan_status_label.configure(text="✓ Scan completed successfully!"))
