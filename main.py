@@ -415,6 +415,7 @@ class DevylApp(ctk.CTk):
         import time
 
         scan_start_time = time.time()
+        banable_programs = []  
         mouse_scanner = MouseScanner()
         ps_scanner = PowerShellScanner()
         account_scanner = AccountScanner()
@@ -447,7 +448,7 @@ class DevylApp(ctk.CTk):
             })
 
         ps_results = ps_scanner.run()
-
+        ps_banable = ps_results.get("banable_programs", []) if ps_results else []
         scan_duration = time.time() - scan_start_time
 
         scan_data = {
@@ -455,7 +456,7 @@ class DevylApp(ctk.CTk):
             "scan_duration":    scan_duration,
             "system_info":      ps_results.get("system_info")      if ps_results else {},
             "bypass_attempts":  ps_results.get("bypass_attempts")  if ps_results else {},
-            "banable_programs": ps_results.get("banable_programs") if ps_results else [],
+            "banable_programs": ps_banable + banable_programs,
             "usb_log":          ps_results.get("usb_log")          if ps_results else [],
             "file_log":         ps_results.get("file_log")         if ps_results else [],   
             "accounts":         account_results,
@@ -545,7 +546,7 @@ class DevylApp(ctk.CTk):
 
         ctk.CTkButton(
             row,
-            text="⬇ Download RustDesk",
+            text="🎮 Mod Analyzer",
             width=220,
             height=45,
             font=("Arial", 13, "bold"),
@@ -555,7 +556,7 @@ class DevylApp(ctk.CTk):
             border_width=2,
             border_color="#AA0000",
             corner_radius=8,
-            command=self._download_rustdesk
+            command=self._open_mod_analyzer
         ).pack(side="left", padx=8)
 
         ctk.CTkButton(
@@ -585,9 +586,9 @@ class DevylApp(ctk.CTk):
             self._flash_status(f"✗ Error: {e}", "#ff4444")
 
 
-    def _download_rustdesk(self):   
-        import webbrowser
-        webbrowser.open("https://github.com/rustdesk/rustdesk/releases/download/1.4.0/rustdesk-1.4.0-x86_64.exe")
+    def _open_mod_analyzer(self):
+        from ui.mod_analyzer_window import ModAnalyzerWindow
+        ModAnalyzerWindow(self)
 
 
     def _open_mouse_tracker(self):
