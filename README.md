@@ -57,6 +57,14 @@ Parses `Microsoft-Windows-Kernel-PnP/Configuration` Event ID `410` to enumerate 
 ### 👤 Minecraft Account Detection
 Scans multiple account storage locations (launcher profiles, credential caches, registry) to enumerate all associated Minecraft accounts, distinguishing the main account from alt accounts, with direct links to NameMC, Laby.net and PvPRivals Website.
 
+Additonally scans Minecraft log files across all known launcher directories (.minecraft, Lunar Client, LabyMod, CheatBreaker, Prism, MultiMC, etc.) for `Setting user:` entries to detect accounts not stored in launcher profiles.
+
+### 💀 Doomsday Client Detection
+Scans for known Doomsday Client artifacts including installation directories, config files and registry entries.
+
+### 🔏 Unsigned Executable Detection
+Scans common directories for unsigned executables matching known cheat client signatures.
+
 ---
 
 ## 📸 Screenshots
