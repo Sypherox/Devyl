@@ -15,6 +15,7 @@ a = Analysis(
         ('config.py', '.'),
         ('scanner', 'scanner'),
         ('utils', 'utils'),
+        ('ui', 'ui'),
     ],
     hiddenimports=[
         'customtkinter',
