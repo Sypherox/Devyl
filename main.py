@@ -421,7 +421,13 @@ class DevylApp(ctk.CTk):
         account_scanner = AccountScanner()
 
         self.after(0, lambda: self.scan_status_label.configure(text="Scanning Minecraft log files for accounts..."))
-        account_results = account_scanner.run() 
+
+        def log_progress(current, total):
+            self.after(0, lambda c=current, t=total: self.scan_status_label.configure(
+                text=f"Scanning log files... {c}/{t} files"
+            ))
+
+        account_results = account_scanner.run(log_progress_callback=log_progress)
 
         def update_progress(driver_name, current, total):
             progress = current / total
@@ -451,6 +457,7 @@ class DevylApp(ctk.CTk):
             })
 
         ps_results = ps_scanner.run()
+        print(f"DEBUG file_log count: {len(ps_results.get('file_log', []))}")
         ps_banable = ps_results.get("banable_programs", []) if ps_results else []
         scan_duration = time.time() - scan_start_time
 

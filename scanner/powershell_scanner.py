@@ -49,9 +49,10 @@ class PowerShellScanner:
             try:
                 completed = subprocess.run(
                     ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", temp_path],
-                    capture_output=True, text=True, encoding="utf-8", errors="replace",
+                    capture_output=True,
                     timeout=60 if key == "filelog" else 25
                 )
+                stdout = completed.stdout.decode("utf-8", errors="replace")
             except subprocess.TimeoutExpired:
                 print(f"Timeout on script: {key}")
                 results[key] = {}
@@ -60,7 +61,7 @@ class PowerShellScanner:
                 os.unlink(temp_path)
 
             try:
-                results[key] = json.loads(completed.stdout.strip())
+                results[key] = json.loads(stdout.strip())
             except Exception as e:
                 print(f"JSON parse error ({key}): {e}")
                 results[key] = {}
@@ -82,6 +83,8 @@ class PowerShellScanner:
     def _build_system_script(self) -> str:
         lines = [
             '$ErrorActionPreference = "SilentlyContinue"',
+            '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+            '$OutputEncoding = [System.Text.Encoding]::UTF8',
             '',
             '$os = Get-CimInstance Win32_OperatingSystem',
             '$lastBoot = $os.LastBootUpTime',
@@ -170,7 +173,9 @@ class PowerShellScanner:
     def _build_bypass_script(self) -> str:
         lines = [
             '$ErrorActionPreference = "SilentlyContinue"',
-            '', 
+            '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+            '$OutputEncoding = [System.Text.Encoding]::UTF8',
+            '',
             '$usnClearedTime = $null',
             'try { $ev = Get-WinEvent -LogName "Application" -FilterXPath "*[System[EventID=3079]]" -MaxEvents 1 -EA SilentlyContinue; if ($ev) { $usnClearedTime = $ev.TimeCreated.ToString("dd.MM.yyyy HH:mm:ss") } } catch {}',
             '',
@@ -276,6 +281,8 @@ class PowerShellScanner:
     def _build_filelog_script(self) -> str:
         lines = [
             '$ErrorActionPreference = "SilentlyContinue"',
+            '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+            '$OutputEncoding = [System.Text.Encoding]::UTF8',
             '',
             '$fileLog = @()',
             'try {',

@@ -120,24 +120,30 @@ def _scan_file(path: str) -> list[str]:
 
 class LogAccountScanner:
 
-    def run(self, max_file_size_mb: int = 50) -> dict:
+    def run(self, max_file_size_mb: int = 50, progress_callback=None) -> dict:
         try:
             max_bytes = max_file_size_mb * 1024 * 1024
             paths     = _get_mc_paths()
             files     = _collect_files(paths, max_bytes)
+            total     = len(files)
 
-            print(f"DEBUG LOG SCANNER: {len(paths)} paths, {len(files)} files")
+            print(f"DEBUG LOG SCANNER: {len(paths)} paths, {total} files")
 
-            mention_count: Counter       = Counter()
+            if total == 0:
+                return {"accounts": [], "total_found": 0, "error": "No log files found"}
+
+            mention_count: Counter         = Counter()
             paths_by_name: dict[str, list] = {}
-            lock = threading.Lock()
+            lock      = threading.Lock()
+            done_ref  = [0] 
 
             def process(fp):
                 names = _scan_file(fp)
-                local = []
-                for n in names:
-                    if _is_valid_username(n):
-                        local.append((n, fp))
+                local = [(n, fp) for n in names if _is_valid_username(n)]
+                with lock:
+                    done_ref[0] += 1
+                    if progress_callback:
+                        progress_callback(done_ref[0], total)
                 return local
 
             with ThreadPoolExecutor(max_workers=16) as exe:
@@ -166,11 +172,7 @@ class LogAccountScanner:
                 })
 
             print(f"DEBUG LOG SCANNER: found {len(accounts)} accounts")
-            return {
-                "accounts":    accounts,
-                "total_found": len(accounts),
-                "error":       "",
-            }
+            return {"accounts": accounts, "total_found": len(accounts), "error": ""}
 
         except Exception as e:
             print(f"DEBUG LOG SCANNER ERROR: {e}")

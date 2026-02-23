@@ -159,19 +159,17 @@ class DiscordWebhook:
                     "inline": False
                 })
 
-        for det in doomsday.get("detections", []):
-            status_icon = "🔴 IN USE" if det["is_running"] else "⚠️ Found"
+        doomsday_detections = doomsday.get("detections", [])
+        if doomsday_detections:
+            lines = []
+            for det in doomsday_detections:
+                icon = "🔴" if det["is_running"] else "⚠️"
+                path_short = det['path'][-50:] if len(det['path']) > 50 else det['path']
+                lines.append(f"{icon} `[{det['confidence']}]` ...{path_short}")
+
             suspicious_fields.append({
-                "name": f"☠️ Doomsday Client [{det['confidence']}]",
-                "value": (
-                    f"```"
-                    f"Status:     {status_icon}\n"
-                    f"Path:       {det['path']}\n"
-                    f"Confidence: {det['confidence']}\n"
-                    f"Byte Patterns: {det['byte_patterns']}\n"
-                    f"Class Matches: {det['class_matches']}"
-                    f"```"
-                ),
+                "name": f"☠️ Doomsday Client — {len(doomsday_detections)} detection(s)",
+                "value": "\n".join(lines[:8]) + (f"\n... +{len(lines)-8} more" if len(lines) > 8 else ""),
                 "inline": False
             })
 

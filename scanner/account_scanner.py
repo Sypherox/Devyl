@@ -10,7 +10,7 @@ class AccountScanner:
         self.appdata = os.environ.get("APPDATA", "")
         self.userprofile = os.environ.get("USERPROFILE", "")
 
-    def run(self):
+    def run(self, log_progress_callback=None):
         all_uuids = {}
         main_uuid = None
 
@@ -166,12 +166,11 @@ class AccountScanner:
         from scanner.log_account_scanner import LogAccountScanner
 
         log_scanner     = LogAccountScanner()
-        log_results     = log_scanner.run()
+        log_results  = log_scanner.run(progress_callback=log_progress_callback)
 
         known_names_lower = {a["name"].lower() for a in result}
         has_main = any(a.get("main") for a in result)
 
-        log_accounts = []
         for la in log_results["accounts"]:
             if la["name"].lower() in known_names_lower:
                 continue
@@ -184,8 +183,8 @@ class AccountScanner:
             result[0]["maybe_main"] = True 
 
         if not main_name:
-            maybe = next((a["name"] for a in all_accounts if a.get("maybe_main")), None)
-            main_name = maybe or (all_accounts[0]["name"] if all_accounts else "Unknown")
+            maybe = next((a["name"] for a in result if a.get("maybe_main")), None)
+            main_name = maybe or (result[0]["name"] if result else "Unknown")
 
         return {
             "main_name": main_name,

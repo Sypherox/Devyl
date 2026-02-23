@@ -181,7 +181,7 @@ function Test-DoomsdayClient { param([string]$Path)
     try {
         $ext = [System.IO.Path]::GetExtension($Path).ToLower()
         $hasPK = Test-ZipMagicBytes -Path $Path
-        if ($hasPK -and $ext -ne ".jar") { $r.IsRenamedJar = $true; $r.IsDetected = $true; $r.Confidence = "HIGH" }
+        if ($hasPK -and $ext -ne ".jar" -and $ext -ne ".zip") { $r.IsRenamedJar = $true; $r.IsDetected = $true; $r.Confidence = "HIGH" }
         if (-not $hasPK) { $r.Error = "Not a JAR/ZIP file"; return $r }
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         $jar = [System.IO.Compression.ZipFile]::OpenRead($Path)
@@ -246,6 +246,22 @@ foreach ($sysFile in $javaFiles) {
     }
 }
 
+$directScanPaths = @(
+    "$env:USERPROFILE\Downloads",
+    "$env:USERPROFILE\Desktop"
+)
+
+foreach ($scanDir in $directScanPaths) {
+    if (-not (Test-Path $scanDir)) { continue }
+    $jarFiles = Get-ChildItem -Path $scanDir -Recurse -Include "*.jar","*.zip" -ErrorAction SilentlyContinue
+    foreach ($jarFile in $jarFiles) {
+        $allJarPaths += $jarFile.FullName
+        if (-not $fileMetadata.ContainsKey($jarFile.FullName)) {
+            $fileMetadata[$jarFile.FullName] = @{ SourceFile = "DirectScan" }
+        }
+    }
+}
+
 $allDrives = Get-PSDrive -PSProvider FileSystem |
     Where-Object { $_.Root -match '^[A-Z]:\\$' } |
     ForEach-Object { $_.Root.Substring(0, 1) }
@@ -254,6 +270,7 @@ $detections  = @()
 $scannedPaths = @()
 
 foreach ($path in ($allJarPaths | Select-Object -Unique)) {
+
     $foundPath = $null
     if (Test-Path $path -PathType Leaf) { $foundPath = $path }
     else {
@@ -267,8 +284,13 @@ foreach ($path in ($allJarPaths | Select-Object -Unique)) {
     }
     if (-not $foundPath) { continue }
 
-    $size = (Get-Item $foundPath -EA SilentlyContinue).Length
-    if ($size -lt 200KB -or $size -gt 15MB) { continue }
+    $skipDirs = @("launcher-cache", "build", "gradle", "cache", "temp", "tmp", "node_modules")
+    $pathLower = $foundPath.ToLower()
+    $skipFile = $false
+    foreach ($sd in $skipDirs) {
+        if ($pathLower -like "*\$sd\*") { $skipFile = $true; break }
+    }
+    if ($skipFile) { continue }
 
     $scannedPaths += $foundPath
     $res = Test-DoomsdayClient -Path $foundPath
@@ -290,10 +312,20 @@ foreach ($path in ($allJarPaths | Select-Object -Unique)) {
     }
 }
 
+$seen = @{}
+$dedupedDetections = @()
+foreach ($d in $detections) {
+    $key = $d.Path.ToLower()
+    if (-not $seen.ContainsKey($key)) {
+        $seen[$key] = $true
+        $dedupedDetections += $d
+    }
+}
+
 $output = @{
-    Detections    = $detections
-    ScannedCount  = $scannedPaths.Count
-    RunningJava   = $runningJavaPaths
+    Detections   = $dedupedDetections
+    ScannedCount = $scannedPaths.Count
+    RunningJava  = $runningJavaPaths
 }
 
 $output | ConvertTo-Json -Depth 5
@@ -319,14 +351,13 @@ class DoomsdayScanner:
                     "-File", tmp.name
                 ],
                 capture_output=True,
-                text=True,
                 timeout=120,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
 
             os.unlink(tmp.name)
 
-            raw = result.stdout.strip()
+            raw = result.stdout.decode("utf-8", errors="replace").strip()
             if not raw:
                 return self._empty_result("No output from PowerShell")
 
