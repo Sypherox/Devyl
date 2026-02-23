@@ -161,15 +161,21 @@ class DiscordWebhook:
 
         doomsday_detections = doomsday.get("detections", [])
         if doomsday_detections:
-            lines = []
+            doomsday_lines = []
             for det in doomsday_detections:
-                icon = "🔴" if det["is_running"] else "⚠️"
+                status = "[RUNNING]" if det["is_running"] else "[HIGH]"
                 path_short = det['path'][-50:] if len(det['path']) > 50 else det['path']
-                lines.append(f"{icon} `[{det['confidence']}]` ...{path_short}")
+                doomsday_lines.append(f"{status} ...{path_short}")
+
+            value_text = "\n".join(doomsday_lines[:5])
+            if len(value_text) > 900:
+                value_text = value_text[:900] + "\n..."
+            if len(doomsday_lines) > 5:
+                value_text += f"\n... +{len(doomsday_lines)-5} more"
 
             suspicious_fields.append({
                 "name": f"☠️ Doomsday Client — {len(doomsday_detections)} detection(s)",
-                "value": "\n".join(lines[:8]) + (f"\n... +{len(lines)-8} more" if len(lines) > 8 else ""),
+                "value": f"```{value_text}```",
                 "inline": False
             })
 
