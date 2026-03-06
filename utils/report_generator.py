@@ -58,6 +58,7 @@ class ReportGenerator:
         banable       = scan_results.get("banable_programs", [])
         usb_log       = scan_results.get("usb_log", [])
         file_log      = scan_results.get("file_log", [])
+        dps_findings = scan_results.get("dps_findings", [])
 
         filename = f"scan_{self.scan_id}_{self.timestamp.strftime('%Y%m%d_%H%M%S')}.html"
 
@@ -504,6 +505,26 @@ class ReportGenerator:
     </div>
 """
 
+        doomsday = scan_results.get("doomsday", {})
+        for det in doomsday.get("detections", []):
+            conf       = det.get("confidence", "UNKNOWN")
+            is_running = det.get("is_running", False)
+            status_txt = "IN USE" if is_running else "Found on system"
+            banable.append({
+                "name":      f"☠️ Doomsday Client — {conf} Confidence ({status_txt})",
+                "last_run":  det.get("source_prefetch", "N/A"),
+                "suspicious": True,
+            })
+
+        dps_findings = scan_results.get("dps_findings", [])
+        for entry in dps_findings:
+            is_sus = entry["status"] == "suspicious"
+            banable.append({
+                "name":      f"🧠 {entry['name']}",
+                "last_run":  f"String: {entry['string']}" + (" — ⚠ last 12h" if is_sus else ""),
+                "suspicious": is_sus,
+            })
+
         if banable:
             html += """
     <div class="section">
@@ -532,67 +553,6 @@ class ReportGenerator:
         </div>
     </div>
 """
-        doomsday = scan_results.get("doomsday", {})
-        doomsday_detections = doomsday.get("detections", [])
-        if doomsday_detections:
-            html += """
-    <div class="section">
-        <div class="section-header" onclick="toggleSection('doomsday')">
-            <div class="section-title">☠️ Doomsday Client</div>
-            <span class="section-toggle-icon" id="icon-doomsday">▶</span>
-        </div>
-        <div class="section-body" id="body-doomsday">
-"""
-            for det in doomsday_detections:
-                conf        = det.get("confidence", "UNKNOWN")
-                is_running  = det.get("is_running", False)
-                status_txt  = "🔴 IN USE" if is_running else "⚠️ Found on system"
-                conf_color  = "#FF0000" if conf == "HIGH" else ("#ffaa00" if conf == "MEDIUM" else "#888888")
-                html += f"""
-            <div class="driver-item suspicious">
-                <div class="driver-header">
-                    <div class="driver-header-left">
-                        <div class="driver-name">☠️ Doomsday Client — {conf} Confidence</div>
-                    </div>
-                    <div class="status-badge status-suspicious">Suspicious</div>
-                </div>
-                <div class="driver-details show">
-                    <div class="detail-row">
-                        <div class="detail-label">Status:</div>
-                        <div class="detail-value" style="color:{conf_color};font-weight:bold;">{status_txt}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Path:</div>
-                        <div class="detail-value">{det.get('path','Unknown')}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Confidence:</div>
-                        <div class="detail-value" style="color:{conf_color};font-weight:bold;">{conf}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Byte Patterns:</div>
-                        <div class="detail-value">{det.get('byte_patterns', 0)}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Class Matches:</div>
-                        <div class="detail-value">{det.get('class_matches', 0)}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Renamed JAR:</div>
-                        <div class="detail-value">{'Yes 🚨' if det.get('is_renamed_jar') else 'No'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Source Prefetch:</div>
-                        <div class="detail-value">{det.get('source_prefetch','N/A')}</div>
-                    </div>
-                </div>
-            </div>
-"""
-            html += """
-        </div>
-    </div>
-"""
-
         unsigned = scan_results.get("unsigned", {})
         unsigned_files = unsigned.get("unsigned_files", [])
         cheat_files    = unsigned.get("cheat_files", [])

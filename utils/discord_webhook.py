@@ -1,6 +1,5 @@
 import requests
 from datetime import datetime
-import os
 
 
 class DiscordWebhook:
@@ -18,40 +17,48 @@ class DiscordWebhook:
         system_info   = scan_results.get("system_info", {})
         mouse_drivers = scan_results.get("mouse_drivers", [])
         banable       = scan_results.get("banable_programs", [])
-
-        doomsday = scan_results.get("doomsday", {})
-
-        unsigned = scan_results.get("unsigned", {})
+        unsigned      = scan_results.get("unsigned", {})
 
         suspicious_fields = []
 
         for d in mouse_drivers:
             if d.get("suspicious"):
                 suspicious_fields.append({
-                    "name": f"🖱️ Suspicious Driver: {d['driver']}",
-                    "value": f"```Path: {d['path']}\nFile: {d['file']}\nModified: {d['last_modified']}```",
+                    "name":   f"🖱️ Suspicious Driver: {d['driver']}",
+                    "value":  f"```Path: {d['path']}\nFile: {d['file']}\nModified: {d['last_modified']}```",
                     "inline": False
                 })
 
         for p in banable:
             if p.get("suspicious"):
                 suspicious_fields.append({
-                    "name": f"⚠️ Banable Program: {p['name']}",
-                    "value": f"```Last Run: {p.get('last_run') or 'Unknown'}```",
+                    "name":   f"⚠️ Banable Program: {p['name']}",
+                    "value":  f"```Last Run: {p.get('last_run') or 'Unknown'}```",
                     "inline": False
                 })
 
-        bypass_checks = [
+        dps_findings = scan_results.get("dps_findings", [])
+        info_dps = [e for e in dps_findings if e["status"] == "info"]
+        if info_dps:
+            names = ", ".join(e["name"] for e in info_dps[:8])
+            if len(info_dps) > 8:
+                names += f" (+{len(info_dps)-8} more)"
+            suspicious_fields.append({
+                "name":   f"🧠 DPS Memory Strings ({len(info_dps)} found)",
+                "value":  f"```{names}```",
+                "inline": False
+            })
+
+        for key, label in [
             ("usn",                  "🗑️ USN Journal Cleared"),
             ("eventlogs",            "📋 Event Logs Cleared"),
             ("security_log_cleared", "🔒 Security Log Cleared"),
-        ]
-        for key, label in bypass_checks:
+        ]:
             info = bypass.get(key, {})
             if info.get("level") == "Suspicious":
                 suspicious_fields.append({
-                    "name": label,
-                    "value": f"```Time: {info.get('time') or 'Unknown'}```",
+                    "name":   label,
+                    "value":  f"```Time: {info.get('time') or 'Unknown'}```",
                     "inline": False
                 })
 
@@ -64,66 +71,25 @@ class DiscordWebhook:
             if info.get("level") == "Suspicious":
                 items = ", ".join(info.get("items", [])[:5])
                 suspicious_fields.append({
-                    "name": label,
-                    "value": f"```{items}```",
+                    "name":   label,
+                    "value":  f"```{items}```",
                     "inline": False
                 })
 
         for cf in unsigned.get("cheat_files", []):
             suspicious_fields.append({
-                "name": f"🚨 Manthe Client Binary",
-                "value": (
-                    f"```"
-                    f"File: {cf['name']}\n"
-                    f"Path: {cf['path']}\n"
-                    f"Size: {cf['size_mb']} MB\n"
-                    f"Modified: {cf['last_mod']}"
-                    f"```"
-                ),
+                "name":  "🚨 Manthe Client Binary",
+                "value": f"```File: {cf['name']}\nPath: {cf['path']}\nSize: {cf['size_mb']} MB\nModified: {cf['last_mod']}```",
                 "inline": False
             })
 
         u_count = len(unsigned.get("unsigned_files", []))
         if u_count > 0:
             suspicious_fields.append({
-                "name": f"🔓 Unsigned Executables in System32/SysWOW64/Temp",
-                "value": f"```{u_count} unsigned file(s) found```",
+                "name":   "🔓 Unsigned Executables in System32/SysWOW64/Temp",
+                "value":  f"```{u_count} unsigned file(s) found```",
                 "inline": False
             })
-
-        renamed = bypass.get("renamed_exes", {})
-        if renamed.get("level") == "Suspicious":
-            items_text = "\n".join(
-                f"{i.get('Path')} ({i.get('Extension')})" 
-                for i in renamed.get("items", [])[:3]
-            )
-            suspicious_fields.append({
-                "name": "🔄 Renamed Executables",
-                "value": f"```{items_text}```",
-                "inline": False
-            })
-
-        rb = bypass.get("recycle_bin", {})
-        if rb.get("level") == "Suspicious":
-            suspicious_fields.append({
-                "name": "🗑️ Recycle Bin Activity",
-                "value": f"```Last Modified: {rb.get('last_modified') or 'Unknown'}\nLast Item: {rb.get('last_item') or 'Empty'}```",
-                "inline": False
-            })
-
-        for key, label in [
-            ("hidden_prefetch",    "👻 Hidden Prefetch Files"),
-            ("readonly_prefetch",  "🔒 Read-Only Prefetch Files"),
-            ("duplicate_prefetch", "📄 Duplicate Prefetch Files"),
-        ]:
-            info = bypass.get(key, {})
-            if info.get("level") == "Suspicious":
-                items = ", ".join(info.get("items", [])[:5])
-                suspicious_fields.append({
-                    "name": label,
-                    "value": f"```{items}```",
-                    "inline": False
-                })
 
         renamed = bypass.get("renamed_exes", {})
         if renamed.get("level") == "Suspicious":
@@ -132,52 +98,40 @@ class DiscordWebhook:
                 for i in renamed.get("items", [])[:3]
             )
             suspicious_fields.append({
-                "name": "🔄 Renamed Executables",
-                "value": f"```{items_text}```",
+                "name":   "🔄 Renamed Executables",
+                "value":  f"```{items_text}```",
+                "inline": False
+            })
+
+        rb = bypass.get("recycle_bin", {})
+        if rb.get("level") == "Suspicious":
+            suspicious_fields.append({
+                "name":   "🗑️ Recycle Bin Activity",
+                "value":  f"```Last Modified: {rb.get('last_modified') or 'Unknown'}\nLast Item: {rb.get('last_item') or 'Empty'}```",
                 "inline": False
             })
 
         for svc in system_info.get("services", []):
             if svc.get("level") == "Suspicious":
                 suspicious_fields.append({
-                    "name": f"⚙️ Service Stopped: {svc['name']}",
-                    "value": f"```{svc.get('reason', 'Unknown')}```",
+                    "name":   f"⚙️ Service Stopped: {svc['name']}",
+                    "value":  f"```{svc.get('reason', 'Unknown')}```",
                     "inline": False
                 })
 
         for key, label in [
-            ("cmd_logging",   "💻 CMD Logging Disabled"),
-            ("ps_logging",    "💻 PS Logging Disabled"),
-            ("prefetch",      "📁 Prefetch Disabled"),
-            ("uav_disabled",  "👁️ UserAssist Disabled"),
-            ("no_recent_docs","📂 Recent Docs Disabled"),
+            ("cmd_logging",    "💻 CMD Logging Disabled"),
+            ("ps_logging",     "💻 PS Logging Disabled"),
+            ("prefetch",       "📁 Prefetch Disabled"),
+            ("uav_disabled",   "👁️ UserAssist Disabled"),
+            ("no_recent_docs", "📂 Recent Docs Disabled"),
         ]:
             if system_info.get(key) == "Suspicious":
                 suspicious_fields.append({
-                    "name": f"🚨 {label}",
-                    "value": "```Suspicious registry value detected```",
+                    "name":   f"🚨 {label}",
+                    "value":  "```Suspicious registry value detected```",
                     "inline": False
                 })
-
-        doomsday_detections = doomsday.get("detections", [])
-        if doomsday_detections:
-            doomsday_lines = []
-            for det in doomsday_detections:
-                status = "[RUNNING]" if det["is_running"] else "[HIGH]"
-                path_short = det['path'][-50:] if len(det['path']) > 50 else det['path']
-                doomsday_lines.append(f"{status} ...{path_short}")
-
-            value_text = "\n".join(doomsday_lines[:5])
-            if len(value_text) > 900:
-                value_text = value_text[:900] + "\n..."
-            if len(doomsday_lines) > 5:
-                value_text += f"\n... +{len(doomsday_lines)-5} more"
-
-            suspicious_fields.append({
-                "name": f"☠️ Doomsday Client — {len(doomsday_detections)} detection(s)",
-                "value": f"```{value_text}```",
-                "inline": False
-            })
 
         if suspicious_fields:
             color  = 0xFF0000
@@ -190,11 +144,11 @@ class DiscordWebhook:
         duration_str  = f"{scan_duration:.1f}s" if scan_duration < 60 else f"{int(scan_duration//60)}m {scan_duration%60:.0f}s"
 
         base_fields = [
-            {"name": "🆔 Scan ID",       "value": f"`{scan_id}`",                                   "inline": True},
-            {"name": "📊 Result",         "value": status,                                            "inline": True},
-            {"name": "⏱️ Duration",       "value": duration_str,                                      "inline": True},
-            {"name": "🕐 Time",           "value": datetime.now().strftime('%d.%m.%Y %H:%M:%S'),      "inline": True},
-            {"name": "🚨 Findings",       "value": str(len(suspicious_fields)) + " suspicious",       "inline": True},
+            {"name": "🆔 Scan ID",   "value": f"`{scan_id}`",                              "inline": True},
+            {"name": "📊 Result",     "value": status,                                       "inline": True},
+            {"name": "⏱️ Duration",   "value": duration_str,                                 "inline": True},
+            {"name": "🕐 Time",       "value": datetime.now().strftime('%d.%m.%Y %H:%M:%S'), "inline": True},
+            {"name": "🚨 Findings",   "value": f"{len(suspicious_fields)} suspicious",       "inline": True},
         ]
 
         thumbnail_url = f"https://visage.surgeplay.com/bust/{mc_uuid}" if mc_uuid else None
@@ -206,16 +160,16 @@ class DiscordWebhook:
             "fields":      base_fields + (suspicious_fields if suspicious_fields else [
                 {"name": "✅ No Suspicious Findings", "value": "All checks passed clean.", "inline": False}
             ]),
-            "footer":      {"text": "Devyl DFIR Tool | sypherox.dev"},
-            "timestamp":   datetime.now().isoformat(),
+            "footer":    {"text": "Devyl DFIR Tool | sypherox.dev"},
+            "timestamp": datetime.now().isoformat(),
         }
 
         if thumbnail_url:
             embed["thumbnail"] = {"url": thumbnail_url}
 
         payload = {
-            "username":   "Devyl",
-            "embeds":     [embed]
+            "username": "Devyl",
+            "embeds":   [embed]
         }
 
         try:

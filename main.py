@@ -456,6 +456,10 @@ class DevylApp(ctk.CTk):
                 "suspicious": True,
             })
 
+        self.after(0, lambda: self.scan_status_label.configure(text="Scanning DPS memory strings..."))
+        from scanner.dps_scanner import run_dps_scan
+        dps_results = run_dps_scan()
+
         ps_results = ps_scanner.run()
         print(f"DEBUG file_log count: {len(ps_results.get('file_log', []))}")
         ps_banable = ps_results.get("banable_programs", []) if ps_results else []
@@ -472,6 +476,7 @@ class DevylApp(ctk.CTk):
             "accounts":         account_results,
             "doomsday":         doomsday_results,
             "unsigned": unsigned_results,
+            "dps_findings":     dps_results,
         }
 
         self.after(0, lambda: self.scan_status_label.configure(text="✓ Scan completed successfully!"))
