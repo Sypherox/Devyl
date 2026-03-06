@@ -52,7 +52,7 @@ class DevylApp(ctk.CTk):
         super().__init__()
         
         self.title("𝕯𝖊𝖛𝖞𝖑")
-        self.geometry("800x850")
+        self.geometry("800x950")
         self.resizable(False, False)
         
         icon_path = get_resource_path("Logo.ico")
@@ -74,6 +74,7 @@ class DevylApp(ctk.CTk):
         
         self.glow_time = 0
         self.animation_running = True
+        self.scan_logs = True 
         
         self.setup_ui()
         self.animate_glow()
@@ -116,18 +117,16 @@ class DevylApp(ctk.CTk):
     def setup_ui(self):
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=40, pady=40)
-        
+
         logo_image = self.create_glowing_logo()
         if logo_image:
             logo_container = ctk.CTkFrame(main_frame, fg_color="transparent")
             logo_container.pack(pady=(0, 15), fill="x")
-            
             self.logo_label = ctk.CTkLabel(logo_container, image=logo_image, text="")
             self.logo_label.pack()
-        
+
         title_container = ctk.CTkFrame(main_frame, fg_color="transparent")
         title_container.pack(pady=(0, 5), fill="x")
-        
         self.title_label = ctk.CTkLabel(
             title_container,
             text="DEVYL",
@@ -135,116 +134,122 @@ class DevylApp(ctk.CTk):
             text_color=self.RED_NEON
         )
         self.title_label.pack()
-        
+
         subtitle = ctk.CTkLabel(
             main_frame,
             text="━━━  DFIR SCREENSHARE TOOL  ━━━",
             font=("Consolas", 14, "bold"),
             text_color="#666666"
         )
-        subtitle.pack(pady=(0, 35))
-        
-        self.outer_glow_frame = ctk.CTkFrame(
+        subtitle.pack(pady=(0, 20))
+
+        tools_label = ctk.CTkLabel(
             main_frame,
-            fg_color="transparent",
-            corner_radius=18
+            text="━━━  QUICK TOOLS  ━━━",
+            font=("Consolas", 11, "bold"),
+            text_color="#444444"
         )
-        self.outer_glow_frame.pack(pady=20, padx=60, fill="x")
-        
+        tools_label.pack(pady=(0, 8))
+
+        tools_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        tools_row.pack(pady=(0, 20))
+
+        btn_style = dict(
+            height=38, font=("Arial", 12, "bold"),
+            fg_color="#1a1a1a", hover_color="#AA0000",
+            text_color="#ffffff", border_width=2,
+            border_color="#AA0000", corner_radius=8
+        )
+
+        ctk.CTkButton(tools_row, text="👁 Show hidden files", width=200,
+                      command=self._run_show_hidden_files, **btn_style).pack(side="left", padx=6)
+        ctk.CTkButton(tools_row, text="🎮 Mod Analyzer",      width=180,
+                      command=self._open_mod_analyzer,     **btn_style).pack(side="left", padx=6)
+        ctk.CTkButton(tools_row, text="🖱 Mouse Tracker",     width=180,
+                      command=self._open_mouse_tracker,    **btn_style).pack(side="left", padx=6)
+
+        self.outer_glow_frame = ctk.CTkFrame(main_frame, fg_color="transparent", corner_radius=18)
+        self.outer_glow_frame.pack(pady=10, padx=60, fill="x")
+
         self.card_frame = ctk.CTkFrame(
-            self.outer_glow_frame, 
-            fg_color=self.BG_CARD,
-            corner_radius=15,
-            border_width=3,
-            border_color=self.RED_NEON
+            self.outer_glow_frame,
+            fg_color=self.BG_CARD, corner_radius=15,
+            border_width=3, border_color=self.RED_NEON
         )
         self.card_frame.pack(padx=3, pady=3, fill="x")
-        
+
         card_content = ctk.CTkFrame(self.card_frame, fg_color="transparent")
-        card_content.pack(padx=40, pady=35)
-        
-        code_label = ctk.CTkLabel(
-            card_content,
-            text="ACCESS CODE",
-            font=("Arial", 14, "bold"),
-            text_color="#888888"
-        )
-        code_label.pack(pady=(0, 10))
-        
-        self.entry_outer_frame = ctk.CTkFrame(
-            card_content,
-            fg_color="transparent",
-            corner_radius=13
-        )
+        card_content.pack(padx=40, pady=30)
+
+        ctk.CTkLabel(card_content, text="ACCESS CODE",
+                     font=("Arial", 14, "bold"), text_color="#888888").pack(pady=(0, 10))
+
+        self.entry_outer_frame = ctk.CTkFrame(card_content, fg_color="transparent", corner_radius=13)
         self.entry_outer_frame.pack(pady=10)
-        
+
         self.password_entry = ctk.CTkEntry(
             self.entry_outer_frame,
             placeholder_text="Enter your access code",
-            width=400,
-            height=55,
-            font=("Minecraft", 12),
-            border_color=self.RED_NEON,
-            border_width=3,
-            fg_color="#0f0f0f",
-            text_color="#ffffff",
-            placeholder_text_color="#555555",
-            corner_radius=10,
-            show="●"
-        )
+            width=400, height=55, font=("Minecraft", 12),
+            border_color=self.RED_NEON, border_width=3,
+            fg_color="#0f0f0f", text_color="#ffffff",
+            placeholder_text_color="#555555", corner_radius=10, show="●"
+       )
         self.password_entry.pack(padx=3, pady=3)
         self.password_entry.bind("<Return>", lambda e: self.start_scan())
-        
-        self.button_outer_frame = ctk.CTkFrame(
+
+        self.log_scan_var = ctk.BooleanVar(value=True)
+        self.log_scan_check = ctk.CTkCheckBox(
             card_content,
-            fg_color="transparent",
-            corner_radius=13
+            text="Scan Minecraft log files for accounts",
+            variable=self.log_scan_var,
+            font=("Arial", 12),
+            text_color="#888888",
+            fg_color="#AA0000",
+            hover_color="#FF0000",
+            border_color="#555555",
+            checkmark_color="#ffffff",
+            command=self._on_log_scan_toggle
         )
+        self.log_scan_check.pack(pady=(12, 0))
+
+        self.button_outer_frame = ctk.CTkFrame(card_content, fg_color="transparent", corner_radius=13)
         self.button_outer_frame.pack(pady=(15, 0))
-        
+
         self.start_button = ctk.CTkButton(
             self.button_outer_frame,
             text="⚡ START SCAN ⚡",
-            width=400,
-            height=60,
+            width=400, height=60,
             font=("Arial Black", 18, "bold"),
-            fg_color=self.RED_NEON,
-            hover_color=self.RED_GLOW,
-            text_color="#ffffff",
-            corner_radius=10,
-            border_width=2,
-            border_color=self.RED_GLOW,
+            fg_color=self.RED_NEON, hover_color=self.RED_GLOW,
+            text_color="#ffffff", corner_radius=10,
+            border_width=2, border_color=self.RED_GLOW,
             command=self.start_scan
         )
         self.start_button.pack(padx=3, pady=3)
-        
+
         self.coded_by = ctk.CTkLabel(
-            card_content,
-            text="Coded by Sypherox",
-            font=("Arial", 12, "bold"),
-            text_color=self.RED_NEON
+            card_content, text="Coded by Sypherox",
+            font=("Arial", 12, "bold"), text_color=self.RED_NEON
         )
         self.coded_by.pack(pady=(18, 0))
-        
+
         self.status_label = ctk.CTkLabel(
-            main_frame,
-            text="",
-            font=("Consolas", 12, "bold"),
-            text_color="#888888"
+            main_frame, text="",
+            font=("Consolas", 12, "bold"), text_color="#888888"
         )
         self.status_label.pack(pady=15)
-        
+
         footer_container = ctk.CTkFrame(main_frame, fg_color="transparent", height=30)
         footer_container.pack(side="bottom", fill="x", pady=(15, 0))
         footer_container.pack_propagate(False)
-        
-        footer = ctk.CTkLabel(
-            footer_container,
-            text="© 2026 sypherox.dev",
-            font=("Arial", 10),
-            text_color="#333333"
-        )
-        footer.pack(expand=True)
+        ctk.CTkLabel(
+            footer_container, text="© 2026 sypherox.dev",
+            font=("Arial", 10), text_color="#333333"
+        ).pack(expand=True)
+
+    def _on_log_scan_toggle(self):
+        self.scan_logs = self.log_scan_var.get()
     
     def animate_glow(self):
         if not self.animation_running:
@@ -427,7 +432,10 @@ class DevylApp(ctk.CTk):
                 text=f"Scanning log files... {c}/{t} files"
             ))
 
-        account_results = account_scanner.run(log_progress_callback=log_progress)
+        account_results = account_scanner.run(
+            log_progress_callback=log_progress,
+            scan_logs=getattr(self, 'scan_logs', True)
+        )
 
         def update_progress(driver_name, current, total):
             progress = current / total
@@ -589,32 +597,119 @@ class DevylApp(ctk.CTk):
             command=self._open_mouse_tracker
         ).pack(side="left", padx=8)
 
+        if not getattr(self, 'scan_logs', True):
+            row2 = ctk.CTkFrame(btn_frame, fg_color="transparent")
+            row2.pack(pady=(10, 0))
+            ctk.CTkButton(
+                row2,
+                text="🔍 Scan Log Files for Accounts",
+                width=460,
+                height=45,
+                font=("Arial", 13, "bold"),
+                fg_color="#1a1a1a",
+                hover_color="#AA0000",
+                text_color="#ffffff",
+                border_width=2,
+                border_color="#AA0000",
+                corner_radius=8,
+                command=self._run_log_scan_post
+        ).pack()
 
     def _run_show_hidden_files(self):
         from scanner.powershell_scanner import PowerShellScanner
         try:
             ps = PowerShellScanner()
             ps.set_show_hidden_files()
-            for widget in self.winfo_children():
-                self._flash_status("✓ Hidden files are now visible", "#00ff88")
+            self._flash_status("✓ Hidden files are now visible", "#00ff88")
         except Exception as e:
             self._flash_status(f"✗ Error: {e}", "#ff4444")
-
 
     def _open_mod_analyzer(self):
         from ui.mod_analyzer_window import ModAnalyzerWindow
         ModAnalyzerWindow(self)
 
-
     def _open_mouse_tracker(self):
         MouseTrackerWindow(self)
-
 
     def _flash_status(self, message, color):
         try:
             self.scan_status_label.configure(text=message, text_color=color)
         except Exception:
-            pass
+            try:
+                self.status_label.configure(text=message, text_color=color)
+            except Exception:
+                pass
+
+    def _run_log_scan_post(self):
+        self._flash_status("🔍 Scanning log files...", "#ffaa00")
+        import threading
+        def _do():
+            from scanner.account_scanner import AccountScanner
+            scanner = AccountScanner()
+            results = scanner.run()
+            accounts = results.get('accounts', [])
+            self.after(0, lambda: self._show_accounts_popup(accounts))
+        threading.Thread(target=_do, daemon=True).start()
+
+    def _show_accounts_popup(self, accounts):
+        self._flash_status(f"✓ Found {len(accounts)} account(s)", "#00ff88")
+
+        popup = ctk.CTkToplevel(self)
+        popup.title("Found Accounts")
+        popup.geometry("500x420")
+        popup.resizable(False, False)
+        popup.configure(fg_color="#0a0a0a")
+        popup.grab_set()
+
+        ctk.CTkLabel(
+            popup,
+            text=f"🔍 FOUND {len(accounts)} ACCOUNT(S)",
+            font=("Arial Black", 18, "bold"),
+            text_color="#AA0000"
+        ).pack(pady=(20, 5))
+
+        ctk.CTkLabel(
+            popup,
+            text="Accounts found in Minecraft log files",
+            font=("Consolas", 11),
+            text_color="#555555"
+        ).pack(pady=(0, 15))
+
+        textbox = ctk.CTkTextbox(
+            popup,
+            width=460,
+            height=280,
+            font=("Courier New", 12),
+            fg_color="#0f0f0f",
+            text_color="#00ff88",
+            border_color="#AA0000",
+            border_width=2,
+            corner_radius=8
+        )
+        textbox.pack(padx=20)
+
+        if accounts:
+            for acc in accounts:
+                if isinstance(acc, dict):
+                    line = acc.get('username') or acc.get('name') or str(acc)
+                else:
+                    line = str(acc)
+                textbox.insert("end", f"  • {line}\n")
+        else:
+            textbox.insert("end", "  No accounts found.")
+
+        textbox.configure(state="disabled")
+
+        ctk.CTkButton(
+            popup,
+            text="Close",
+            width=120, height=36,
+            font=("Arial", 12, "bold"),
+            fg_color="#1a1a1a", hover_color="#AA0000",
+            border_width=2, border_color="#AA0000",
+            corner_radius=8,
+            command=popup.destroy
+        ).pack(pady=12)
 
 import threading
 

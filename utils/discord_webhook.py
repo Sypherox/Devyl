@@ -1,4 +1,5 @@
 import requests
+import os
 from datetime import datetime
 
 
@@ -174,7 +175,24 @@ class DiscordWebhook:
 
         try:
             response = requests.post(self.webhook_url, json=payload)
-            return response.status_code == 204
+            embed_ok = response.status_code == 204
         except Exception as e:
             print(f"Webhook error: {e}")
-            return False
+            embed_ok = False
+
+        file_ok = False
+        if html_report_path and os.path.exists(html_report_path):
+            try:
+                filename = f"devyl_report_{scan_id}.html"
+                with open(html_report_path, "rb") as f:
+                    response = requests.post(
+                        self.webhook_url,
+                        data={"username": "Devyl", "content": f"📄 **Full Report** — `{mc_name}` — `{scan_id}`"},
+                        files={"file": (filename, f, "text/html")}
+                    )
+                file_ok = response.status_code in (200, 204)
+                print(f"DEBUG: HTML upload status: {response.status_code}")
+            except Exception as e:
+                print(f"Webhook file upload error: {e}")    
+
+        return embed_ok
