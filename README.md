@@ -65,6 +65,8 @@ Scans for known Doomsday Client artifacts including installation directories, co
 ### 🔏 Unsigned Executable Detection
 Scans common directories for unsigned executables matching known cheat client signatures.
 
+> ⚠️ **Note:** The DPS Scanner (over 500 known cheat signature strings) is temporarily disabled and will return in a future update.
+
 ---
 
 ## 📸 Screenshots
@@ -90,6 +92,8 @@ Scans common directories for unsigned executables matching known cheat client si
 3. Wait for the scan to complete (~30–60 seconds)
 4. HTML report opens automatically in your browser
 
+> 🧪 **Test Mode:** Want to try Devyl without an official access code? Enter `Test` as the access code to run a sandboxed test scan ⇝ perfect for trying things out before a real screenshare session.
+
 ---
 
 ## ⚙️ Configuration
@@ -100,6 +104,8 @@ Copy `config.example.py` to `config.py` and fill in:
 ACCESS_CODE = "your-secret-code"
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."
 ```
+
+> ℹ️ Regardless of your configured access code, the built-in password `Test` always works and triggers a **Test Mode** scan ⇝ useful for demos or trying Devyl before deploying it live.
 
 ---
 
