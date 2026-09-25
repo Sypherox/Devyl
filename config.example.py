@@ -9,3 +9,6 @@ DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE"
 
 # Upload Settings
 UPLOAD_DOMAIN = "yourdomain.de"
+
+# Virustoal API Key to instantly check suspocious mods
+VIRUSTOTAL_API_KEY = "YOUR_API_KEY"
